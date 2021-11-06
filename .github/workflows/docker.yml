@@ -1,0 +1,70 @@
+name: Docker image build
+
+on:
+  push:
+    branches: [ main, dev, docker ]
+  pull_request:
+    branches: [ main, dev, docker ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      NIM_VERSION: "1.6.0"
+      DIVE_VERSION: "0.10.0"
+
+    steps:
+    - 
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - 
+      name: Checkout nim version
+      run: |
+            set -euo pipefail
+            cd nim
+            git fetch --tags
+            git checkout -f v${NIM_VERSION} --
+
+    - 
+      name: Build Dockerfile
+      timeout-minutes: 20
+      run: |
+            docker build -t nim_testing -t ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64 -f ./Dockerfile .
+    - 
+      name: Install and Run Dive
+      timeout-minutes: 2
+      run: |
+            set -euo pipefail
+            pushd /tmp
+            wget --no-verbose https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb
+            sudo apt install --quiet -y ./dive_${DIVE_VERSION}_linux_amd64.deb
+            popd
+            CI=true dive --ci-config "${{ github.workspace }}/.dive-ci" nim_testing
+            
+    -
+      name: Push to ghcr
+      run: |
+            set -euo pipefail
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker push ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64
+
+    # https://github.com/docker/setup-qemu-action
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+    # https://github.com/docker/setup-buildx-action
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build dockerfile
+      timeout-minutes: 360
+      run: |
+            set -euo pipefail
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker buildx build \
+            --platform=linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le \
+            --output "type=image,push=true" \
+            --file ./Dockerfile . \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:latest \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}

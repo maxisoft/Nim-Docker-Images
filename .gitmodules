@@ -1,0 +1,4 @@
+[submodule "nim"]
+	path = nim
+	url = https://github.com/nim-lang/Nim.git
+	branch = devel
