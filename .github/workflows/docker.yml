@@ -44,7 +44,7 @@ jobs:
             CI=true dive --ci-config "${{ github.workspace }}/.dive-ci" nim_testing
             
     -
-      name: Push to ghcr
+      name: Push x64 to ghcr
       run: |
             set -euo pipefail
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -57,7 +57,7 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
-    - name: Build dockerfile
+    - name: Build And Push MultiArch images
       timeout-minutes: 360
       run: |
             set -euo pipefail
