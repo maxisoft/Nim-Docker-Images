@@ -31,7 +31,7 @@ jobs:
       name: Build Dockerfile
       timeout-minutes: 20
       run: |
-            docker build -t nim_testing -t ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64 -f ./Dockerfile .
+            docker build -t nim_testing -t ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64 -f ./Dockerfile --build-arg RUN_NIM_TEST=1 .
     - 
       name: Install and Run Dive
       timeout-minutes: 2
@@ -45,19 +45,20 @@ jobs:
             
     -
       name: Push x64 to ghcr
+      if: success() && ${{ github.repository_owner }} == "maxisoft"
       run: |
             set -euo pipefail
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker push ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64
 
-    # https://github.com/docker/setup-qemu-action
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
-    # https://github.com/docker/setup-buildx-action
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
     - name: Build And Push MultiArch images
+      if: success() && ${{ github.repository_owner }} == "maxisoft"
       timeout-minutes: 360
       run: |
             set -euo pipefail
@@ -65,6 +66,7 @@ jobs:
             docker buildx build \
             --platform=linux/amd64,linux/arm/v7,linux/arm64/v8 \
             --output "type=image,push=true" \
+            --build-arg RUN_NIM_TEST=0 \
             --file ./Dockerfile . \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:latest \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}
