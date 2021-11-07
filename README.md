@@ -7,10 +7,10 @@ docker run -it --rm ghcr.io/maxisoft/nim-docker-images/nim
 ```
 
 ## Technical descriptions
-We use [github actions](https://github.com/maxisoft/Nim-Docker-Images/blob/main/.github/workflows/docker.yml) and [github packages](https://github.com/maxisoft?tab=packages&repo_name=Nim-Docker-Images) to build and deploy a multi arch docker image.
+We use [github actions](https://github.com/maxisoft/Nim-Docker-Images/blob/main/.github/workflows/docker.yml) and [github packages](https://github.com/maxisoft?tab=packages&repo_name=Nim-Docker-Images) to build and deploy a multi arch docker image.  
 Currently the supported arch are `armv7`, `arm64` and `x64`.
 
-### Image creation processus
+### Image creation steps
 - use [\_/Alpine](https://hub.docker.com/_/alpine) as base
 - install several packages such as dependencies (sqlite, ssl, ect...) and compilers/interpreters (gcc, g++, nodejs)
 - clone official [Nim](https://github.com/nim-lang/Nim) repo and checkout a specific tag
