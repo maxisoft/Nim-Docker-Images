@@ -57,6 +57,13 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
+    -
+      name: Docker Login
+      timeout-minutes: 1
+      if: success() && ${{ github.repository_owner }} == "maxisoft"
+      run: |
+            echo '${{ secrets.DOCKERIO_PASSWORD }}' | docker login --username "maxisoft" --password-stdin
+
     - name: Build And Push MultiArch images
       if: success() && ${{ github.repository_owner }} == "maxisoft"
       timeout-minutes: 360
@@ -68,5 +75,7 @@ jobs:
             --output "type=image,push=true" \
             --build-arg RUN_NIM_TEST=0 \
             --file ./Dockerfile . \
+            --tag maxisoft/nim:latest \
+            --tag maxisoft/nim:v${NIM_VERSION} \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:latest \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}
