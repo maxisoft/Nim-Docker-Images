@@ -122,7 +122,8 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
-    - run: |
+    - name: setup arch env vars
+      run: |
             env_file = os.getenv('GITHUB_ENV')
 
             with open(env_file, "a") as ef:
