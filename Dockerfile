@@ -1,5 +1,5 @@
 FROM alpine as builder
-RUN apk add --no-cache build-base wget unzip openssl-dev zlib-dev pcre-dev pcre2-dev git sqlite-dev g++ curl tar xz nodejs
+RUN apk add --no-cache build-base wget unzip openssl-dev zlib-dev pcre-dev pcre2-dev git sqlite-dev g++ curl tar xz nodejs gc-dev valgrind libucontext-dev
 ENV RUN_NIM_TEST ${RUN_NIM_TEST}
 # install nim
 #RUN mkdir -p /nim

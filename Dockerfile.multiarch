@@ -3,7 +3,7 @@ ARG TARGETPLATFORM
 ARG NIM_VERSION
 LABEL maintainer="github.com/maxisoft" name="nim" description="Unoffical Nim docker image" url="https://github.com/maxisoft/Nim-Docker-Images" vcs-url="https://github.com/maxisoft/Nim-Docker-Images" org.opencontainers.image.source="https://github.com/maxisoft/Nim-Docker-Images"
 COPY nim/${TARGETPLATFORM}/ /nim
-RUN apk add --no-cache build-base wget unzip openssl-dev zlib-dev pcre-dev pcre2-dev git sqlite-dev g++ curl tar xz nodejs && \
+RUN apk add --no-cache build-base wget unzip openssl-dev zlib-dev pcre-dev pcre2-dev git sqlite-dev g++ curl tar xz nodejs gc-dev valgrind libucontext-dev && \
     ln -s /nim/bin/nim /bin/nim && ln -s /nim/bin/nimble /bin/nimble && ln -s /nim/bin/nimsuggest /bin/nimsuggest && ln -s /nim/bin/testament /bin/testament && \
     mkdir -p /usr/src/app
 WORKDIR /usr/src/app
