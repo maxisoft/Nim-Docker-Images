@@ -133,7 +133,7 @@ jobs:
             --output "type=image,push=true" \
             --build-arg RUN_NIM_TEST=0 \
             --file ./Dockerfile.builder . \
-            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAG }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}")
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim_internals:v${NIM_VERSION}_${{ env.ARCHTAG }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}")
             
   combine:
     needs: [ first_build, build_images ]
@@ -176,31 +176,31 @@ jobs:
 
     - run: |
             set -euo pipefail
-            docker create -ti --platform linux/amd64 --name dummyx64 ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAGX64 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
+            docker create -ti --platform linux/amd64 --name dummyx64 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim_internals:v${NIM_VERSION}_${{ env.ARCHTAGX64 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
             mkdir -p nim/linux/amd64
             docker cp -a dummyx64:/nim.tar.xz nim/linux/amd64/
 
     - run: |
             set -euo pipefail
-            docker create -ti --platform linux/arm/v7 --name dummyarm7 ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAGARM7 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
+            docker create -ti --platform linux/arm/v7 --name dummyarm7 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim_internals:v${NIM_VERSION}_${{ env.ARCHTAGARM7 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
             mkdir -p nim/linux/arm/v7
             docker cp -a dummyarm7:/nim.tar.xz nim/linux/arm/v7/
 
     - run: |
             set -euo pipefail
-            docker create -ti --platform linux/arm64/v8 --name dummyarm64 ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAGARM64 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
+            docker create -ti --platform linux/arm64/v8 --name dummyarm64 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim_internals:v${NIM_VERSION}_${{ env.ARCHTAGARM64 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
             mkdir -p nim/linux/arm64/v8
             docker cp -a dummyarm64:/nim.tar.xz nim/linux/arm64/v8/
 
     - run: |
             set -euo pipefail
-            docker create -ti --platform linux/arm/v6 --name dummyarm6 ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAGARM6 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
+            docker create -ti --platform linux/arm/v6 --name dummyarm6 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim_internals:v${NIM_VERSION}_${{ env.ARCHTAGARM6 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
             mkdir -p nim/linux/arm/v6
             docker cp -a dummyarm6:/nim.tar.xz nim/linux/arm/v6/
 
     - run: |
             set -euo pipefail
-            docker create -ti --platform linux/ppc64le --name dummyppc64 ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAGPPC64 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
+            docker create -ti --platform linux/ppc64le --name dummyppc64 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim_internals:v${NIM_VERSION}_${{ env.ARCHTAGPPC64 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
             mkdir -p nim/linux/ppc64le
             docker cp -a dummyppc64:/nim.tar.xz nim/linux/ppc64le/
     -
