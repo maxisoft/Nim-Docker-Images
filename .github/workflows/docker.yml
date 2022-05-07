@@ -37,7 +37,7 @@ jobs:
       name: Simple Test Dockerfile
       timeout-minutes: 3
       run: |
-            docker run -it --rm ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64 --version
+            docker run --rm ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64 --version
 
     - 
       name: Install and Run Dive
