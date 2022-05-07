@@ -9,6 +9,7 @@ on:
 env:
   NIM_VERSION: "1.6.6"
   DIVE_VERSION: "0.10.0"
+  DOCKERIO_USER: "${{ github.repository_owner }}"
 
 jobs:
   first_build:
@@ -82,7 +83,7 @@ jobs:
     -
       name: Push x64 image to ghcr
       timeout-minutes: 5
-      if: success() && ${{ github.repository_owner }} == "maxisoft" && ${{github.event_name != 'pull_request'}}
+      if: success() && ${{ github.event_name != 'pull_request'}}
       run: |
             set -euo pipefail
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -123,7 +124,6 @@ jobs:
       shell: python
 
     - name: Build nim using docker buildx
-      if: success() && ${{ github.repository_owner }} == "maxisoft"
       timeout-minutes: 360
       run: |
             set -euo pipefail
@@ -206,12 +206,11 @@ jobs:
     -
       name: Docker Login
       timeout-minutes: 1
-      if: success() && ${{ github.repository_owner }} == "maxisoft" && ${{github.event_name != 'pull_request'}}
+      if: success() && ${{github.event_name != 'pull_request'}}
       run: |
-            echo '${{ secrets.DOCKERIO_PASSWORD }}' | docker login --username "maxisoft" --password-stdin
+            echo '${{ secrets.DOCKERIO_PASSWORD }}' | docker login --username "${{ env.DOCKERIO_USER }}" --password-stdin
 
-    - name: Build And Push(${{github.event_name != 'pull_request'}}) final nim images
-      if: success() && ${{ github.repository_owner }} == "maxisoft"
+    - name: Build And Push final nim images
       timeout-minutes: 360
       run: |
             set -euo pipefail
@@ -220,14 +219,15 @@ jobs:
             --platform=linux/amd64,linux/arm/v7,linux/arm64/v8,linux/arm/v6,linux/ppc64le \
             --output "type=image,push=${{github.event_name != 'pull_request'}}" \
             --build-arg NIM_VERSION=${NIM_VERSION} \
+            --build-arg GITHUB_USER=${{ github.repository_owner }} \
             --file ./Dockerfile.multiarch . \
-            --tag maxisoft/nim:latest \
-            --tag maxisoft/nim:v${NIM_VERSION} \
-            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:latest \
+            --tag ${{ env.DOCKERIO_USER }}/nim:latest \
+            --tag ${{ env.DOCKERIO_USER }}/nim:v${NIM_VERSION} \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION} \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:git${{ github.sha }} \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:git$(git rev-parse --short "${{ github.sha }}") \
-            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:run${{ github.run_id }}
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:run${{ github.run_id }} \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:latest
   runtime_image:
     needs: [ first_build ]
     runs-on: ubuntu-latest
@@ -255,12 +255,11 @@ jobs:
     -
       name: Docker Login
       timeout-minutes: 1
-      if: success() && ${{ github.repository_owner }} == "maxisoft" && ${{github.event_name != 'pull_request'}}
+      if: success() && ${{github.event_name != 'pull_request'}}
       run: |
-            echo '${{ secrets.DOCKERIO_PASSWORD }}' | docker login --username "maxisoft" --password-stdin
+            echo '${{ secrets.DOCKERIO_PASSWORD }}' | docker login --username "${{ env.DOCKERIO_USER }}" --password-stdin
 
-    - name: Build And Push(${{github.event_name != 'pull_request'}}) runtime images
-      if: success() && ${{ github.repository_owner }} == "maxisoft"
+    - name: Build And Push runtime images
       timeout-minutes: 360
       run: |
             set -euo pipefail
@@ -269,16 +268,17 @@ jobs:
             --platform=linux/amd64,linux/arm/v7,linux/arm64/v8,linux/arm/v6,linux/ppc64le \
             --output "type=image,push=${{github.event_name != 'pull_request'}}" \
             --build-arg NIM_VERSION=${NIM_VERSION} \
+            --build-arg GITHUB_USER=${{ github.repository_owner }} \
             --file ./Dockerfile.runtime . \
-            --tag maxisoft/nim:latest_runtime \
-            --tag maxisoft/nim:v${NIM_VERSION}_runtime \
+            --tag ${{ env.DOCKERIO_USER }}/nim:latest_runtime \
+            --tag ${{ env.DOCKERIO_USER }}/nim:v${NIM_VERSION}_runtime \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:latest_runtime \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_runtime \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:git${{ github.sha }} \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:git$(git rev-parse --short "${{ github.sha }}") \
-            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:latest \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:v${NIM_VERSION} \
-            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:run${{ github.run_id }}
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:run${{ github.run_id }} \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:latest 
 
     - name: Run Dive on x64 image
       run: |
