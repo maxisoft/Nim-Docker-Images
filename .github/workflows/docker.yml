@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest     
     strategy:
         matrix:
-          arch: [linux/amd64, linux/arm/v7, linux/arm64/v8, linux/arm/v6, linux/ppc64le, linux/riscv64]
+          arch: [linux/amd64, linux/arm/v7, linux/arm64/v8, linux/arm/v6, linux/ppc64le]
     steps:
     - 
       uses: actions/checkout@v2
@@ -166,13 +166,6 @@ jobs:
             docker create -ti --platform linux/ppc64le --name dummyppc64 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_${{ env.ARCHTAGPPC64 }} sh
             mkdir -p nim/linux/ppc64le
             docker cp -a dummyppc64:/nim nim/linux/ppc64le
-
-    - run: |
-            set -euo pipefail
-            docker create -ti --platform linux/riscv64 --name dummyriscv64 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_${{ env.ARCHTAGRISC64 }} sh
-            mkdir -p nim/linux/riscv64
-            docker cp -a dummyriscv64:/nim nim/linux/riscv64
-
     -
       name: Docker Login
       timeout-minutes: 1
@@ -187,7 +180,7 @@ jobs:
             set -euo pipefail
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker buildx build \
-            --platform=linux/amd64,linux/arm/v7,linux/arm64/v8,linux/arm/v6,linux/ppc64le,linux/riscv64 \
+            --platform=linux/amd64,linux/arm/v7,linux/arm64/v8,linux/arm/v6,linux/ppc64le \
             --output "type=image,push=true" \
             --build-arg NIM_VERSION=${NIM_VERSION} \
             --file ./Dockerfile.multiarch . \
@@ -234,7 +227,7 @@ jobs:
             set -euo pipefail
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker buildx build \
-            --platform=linux/amd64,linux/arm/v7,linux/arm64/v8,linux/arm/v6,linux/ppc64le,linux/riscv64 \
+            --platform=linux/amd64,linux/arm/v7,linux/arm64/v8,linux/arm/v6,linux/ppc64le \
             --output "type=image,push=true" \
             --build-arg NIM_VERSION=${NIM_VERSION} \
             --file ./Dockerfile.runtime . \
