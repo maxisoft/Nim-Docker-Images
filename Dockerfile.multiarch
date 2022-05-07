@@ -4,7 +4,7 @@ ARG NIM_VERSION
 LABEL maintainer="github.com/maxisoft" name="nim" description="Unoffical Nim docker image" nimversion="$NIM_VERSION" url="https://github.com/maxisoft/Nim-Docker-Images" vcs-url="https://github.com/maxisoft/Nim-Docker-Images" org.opencontainers.image.source="https://github.com/maxisoft/Nim-Docker-Images"
 COPY nim/${TARGETPLATFORM}/ /nim
 RUN apk add --no-cache build-base wget unzip openssl-dev zlib-dev pcre-dev pcre2-dev git sqlite-dev g++ curl tar xz nodejs gc-dev valgrind libucontext-dev && \
-    ln -s /nim/bin/nim /bin/nim && ln -s /nim/bin/nimble /bin/nimble && ln -s /nim/bin/nimsuggest /bin/nimsuggest && ln -s /nim/bin/testament /bin/testament && \
+    ln -s /nim/bin/nim /usr/bin/nim && ln -s /nim/bin/nimble /usr/bin/nimble && ln -s /nim/bin/nimsuggest /usr/bin/nimsuggest && ln -s /nim/bin/testament /usr/bin/testament && ln -s /nim/bin/cmerge /usr/bin/cmerge && ln -s /nim/bin/nimgrep /usr/bin/nimgrep && ln -s /nim/bin/nimgrab /usr/bin/nimgrab && \
     mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 ENTRYPOINT [ "/bin/nim" ]
