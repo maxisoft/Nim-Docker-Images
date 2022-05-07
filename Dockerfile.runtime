@@ -1,4 +1,4 @@
 FROM alpine
 ARG NIM_VERSION
-LABEL maintainer="github.com/maxisoft" name="nim runtime" description="docker image containing required nim runtime libraries" nimversion="$NIM_VERSION" url="https://github.com/maxisoft/Nim-Docker-Images" vcs-url="https://github.com/maxisoft/Nim-Docker-Images" org.opencontainers.image.source="https://github.com/maxisoft/Nim-Docker-Images"
+LABEL maintainer="github.com/maxisoft" name="Nim runtime" description="image containing required nim runtime libraries" org.opencontainers.image.description="image containing required nim runtime libraries" nimversion="$NIM_VERSION" url="https://github.com/maxisoft/Nim-Docker-Images" vcs-url="https://github.com/maxisoft/Nim-Docker-Images" org.opencontainers.image.source="https://github.com/maxisoft/Nim-Docker-Images"
 RUN apk add --no-cache openssl sqlite-libs ca-certificates pcre libucontext

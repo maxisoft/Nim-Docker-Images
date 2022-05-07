@@ -27,14 +27,21 @@ jobs:
             cd nim
             git fetch --tags
             git checkout -f v${NIM_VERSION} --
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
     - 
-      name: Build Dockerfile
+      name: Compile Nim using Dockerfile
       timeout-minutes: 20
       run: |
-            docker build -t nim_testing -f ./Dockerfile --build-arg RUN_NIM_TEST=1 .
+            docker build -t nim_testing -f ./Dockerfile.builder --build-arg RUN_NIM_TEST=1 .
     
     - 
-      name: Simple Test Dockerfile
+      name: Test Nim Version
       timeout-minutes: 3
       run: |
             docker run --rm nim_testing --version
@@ -50,23 +57,31 @@ jobs:
             popd
             CI=true dive --ci-config "${{ github.workspace }}/.dive-ci" nim_testing
 
-    - run: |
+    - name: Copy Compiled Nim Folder
+      run: |
             set -euo pipefail
             docker create -ti --platform linux/amd64 --name dummyx64 nim_testing sh
             mkdir -p nim/linux/amd64
-            docker cp -a dummyx64:/nim nim/linux/amd64
+            docker cp -a dummyx64:/nim.tar.xz nim/linux/amd64/
+            ls -lah nim/linux/amd64
     
-    - run: |
-            docker build
-            --build-arg NIM_VERSION=${NIM_VERSION} \
-            --file ./Dockerfile.runtime . \
-            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64
+    - name: Build using Dockerfile.multiarch 
+      run: |
+            docker buildx build --platform=linux/amd64 --output "type=image" --build-arg NIM_VERSION=${NIM_VERSION} --file ./Dockerfile.multiarch --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64 . 
 
-    - run: |
+    - name: Run Dive on x64 image
+      run: |
             CI=true dive --ci-config "${{ github.workspace }}/.dive-ci" ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64
+
+    - 
+      name: Test Nim Version on x64 image
+      timeout-minutes: 3
+      run: |
+            docker run --rm ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64 --version
             
     -
-      name: Push x64 to ghcr
+      name: Push x64 image to ghcr
+      timeout-minutes: 5
       if: success() && ${{ github.repository_owner }} == "maxisoft" && ${{github.event_name != 'pull_request'}}
       run: |
             set -euo pipefail
@@ -107,7 +122,7 @@ jobs:
               print('ARCHTAG=' + '${{ matrix.arch }}'.replace('/', '_'), file=ef)
       shell: python
 
-    - name: Build And Push images
+    - name: Build nim using docker buildx
       if: success() && ${{ github.repository_owner }} == "maxisoft"
       timeout-minutes: 360
       run: |
@@ -115,10 +130,10 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker buildx build \
             --platform=${{ matrix.arch }} \
-            --output "type=image,push=${{github.event_name != 'pull_request'}}" \
+            --output "type=image,push=true" \
             --build-arg RUN_NIM_TEST=0 \
-            --file ./Dockerfile . \
-            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_${{ env.ARCHTAG }}
+            --file ./Dockerfile.builder . \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAG }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}")
             
   combine:
     needs: [ first_build, build_images ]
@@ -161,41 +176,41 @@ jobs:
 
     - run: |
             set -euo pipefail
-            docker create -ti --platform linux/amd64 --name dummyx64 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_${{ env.ARCHTAGX64 }} sh
+            docker create -ti --platform linux/amd64 --name dummyx64 ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAGX64 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
             mkdir -p nim/linux/amd64
-            docker cp -a dummyx64:/nim nim/linux/amd64
+            docker cp -a dummyx64:/nim.tar.xz nim/linux/amd64/
 
     - run: |
             set -euo pipefail
-            docker create -ti --platform linux/arm/v7 --name dummyarm7 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_${{ env.ARCHTAGARM7 }} sh
+            docker create -ti --platform linux/arm/v7 --name dummyarm7 ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAGARM7 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
             mkdir -p nim/linux/arm/v7
-            docker cp -a dummyarm7:/nim nim/linux/arm/v7
+            docker cp -a dummyarm7:/nim.tar.xz nim/linux/arm/v7/
 
     - run: |
             set -euo pipefail
-            docker create -ti --platform linux/arm64/v8 --name dummyarm64 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_${{ env.ARCHTAGARM64 }} sh
+            docker create -ti --platform linux/arm64/v8 --name dummyarm64 ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAGARM64 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
             mkdir -p nim/linux/arm64/v8
-            docker cp -a dummyarm64:/nim nim/linux/arm64/v8
+            docker cp -a dummyarm64:/nim.tar.xz nim/linux/arm64/v8/
 
     - run: |
             set -euo pipefail
-            docker create -ti --platform linux/arm/v6 --name dummyarm6 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_${{ env.ARCHTAGARM6 }} sh
+            docker create -ti --platform linux/arm/v6 --name dummyarm6 ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAGARM6 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
             mkdir -p nim/linux/arm/v6
-            docker cp -a dummyarm6:/nim nim/linux/arm/v6
+            docker cp -a dummyarm6:/nim.tar.xz nim/linux/arm/v6/
 
     - run: |
             set -euo pipefail
-            docker create -ti --platform linux/ppc64le --name dummyppc64 ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_${{ env.ARCHTAGPPC64 }} sh
+            docker create -ti --platform linux/ppc64le --name dummyppc64 ghcr.io/${{ github.repository_owner }}/nim-docker-images-internals/nim:v${NIM_VERSION}_${{ env.ARCHTAGPPC64 }}_${{ github.event_name }}_$(git rev-parse --short "${{ github.sha }}") sh
             mkdir -p nim/linux/ppc64le
-            docker cp -a dummyppc64:/nim nim/linux/ppc64le
+            docker cp -a dummyppc64:/nim.tar.xz nim/linux/ppc64le/
     -
       name: Docker Login
       timeout-minutes: 1
-      if: success() && ${{ github.repository_owner }} == "maxisoft"
+      if: success() && ${{ github.repository_owner }} == "maxisoft" && ${{github.event_name != 'pull_request'}}
       run: |
             echo '${{ secrets.DOCKERIO_PASSWORD }}' | docker login --username "maxisoft" --password-stdin
 
-    - name: Build And Push images
+    - name: Build And Push(${{github.event_name != 'pull_request'}}) final nim images
       if: success() && ${{ github.repository_owner }} == "maxisoft"
       timeout-minutes: 360
       run: |
@@ -209,8 +224,10 @@ jobs:
             --tag maxisoft/nim:latest \
             --tag maxisoft/nim:v${NIM_VERSION} \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:latest \
-            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}
-
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION} \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:git${{ github.sha }} \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:git$(git rev-parse --short "${{ github.sha }}") \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:run${{ github.run_id }}
   runtime_image:
     needs: [ first_build ]
     runs-on: ubuntu-latest
@@ -238,11 +255,11 @@ jobs:
     -
       name: Docker Login
       timeout-minutes: 1
-      if: success() && ${{ github.repository_owner }} == "maxisoft"
+      if: success() && ${{ github.repository_owner }} == "maxisoft" && ${{github.event_name != 'pull_request'}}
       run: |
             echo '${{ secrets.DOCKERIO_PASSWORD }}' | docker login --username "maxisoft" --password-stdin
 
-    - name: Build And Push images
+    - name: Build And Push(${{github.event_name != 'pull_request'}}) runtime images
       if: success() && ${{ github.repository_owner }} == "maxisoft"
       timeout-minutes: 360
       run: |
@@ -256,5 +273,19 @@ jobs:
             --tag maxisoft/nim:latest_runtime \
             --tag maxisoft/nim:v${NIM_VERSION}_runtime \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:latest_runtime \
-            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_runtime
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_runtime \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:git${{ github.sha }} \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:git$(git rev-parse --short "${{ github.sha }}") \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:latest \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:v${NIM_VERSION} \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim-runtime:run${{ github.run_id }}
+
+    - name: Run Dive on x64 image
+      run: |
+            set -euo pipefail
+            pushd /tmp
+            wget --no-verbose https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb
+            sudo apt install --quiet -y ./dive_${DIVE_VERSION}_linux_amd64.deb
+            popd
+            CI=true dive --ci-config "${{ github.workspace }}/.dive-ci" ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:latest_runtime
             
