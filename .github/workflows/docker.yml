@@ -217,7 +217,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker buildx build \
             --platform=linux/amd64,linux/arm/v7,linux/arm64/v8,linux/arm/v6,linux/ppc64le \
-            --output "type=image,push=${{github.event_name != 'pull_request'}}" \
+            --output "type=image,push=${{ (github.event_name != 'pull_request') && 'true' || 'false'}}" \
             --build-arg NIM_VERSION=${NIM_VERSION} \
             --build-arg GITHUB_USER=${{ github.repository_owner }} \
             --file ./Dockerfile.multiarch . \
@@ -266,7 +266,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker buildx build \
             --platform=linux/amd64,linux/arm/v7,linux/arm64/v8,linux/arm/v6,linux/ppc64le \
-            --output "type=image,push=${{github.event_name != 'pull_request'}}" \
+            --output "type=image,push=${{ (github.event_name != 'pull_request') && 'true' || 'false'}}" \
             --build-arg NIM_VERSION=${NIM_VERSION} \
             --build-arg GITHUB_USER=${{ github.repository_owner }} \
             --file ./Dockerfile.runtime . \
