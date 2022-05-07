@@ -31,13 +31,13 @@ jobs:
       name: Build Dockerfile
       timeout-minutes: 20
       run: |
-            docker build -t nim_testing -t ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64 -f ./Dockerfile --build-arg RUN_NIM_TEST=1 .
+            docker build -t nim_testing -f ./Dockerfile --build-arg RUN_NIM_TEST=1 .
     
     - 
       name: Simple Test Dockerfile
       timeout-minutes: 3
       run: |
-            docker run --rm ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64 --version
+            docker run --rm nim_testing --version
 
     - 
       name: Install and Run Dive
@@ -49,10 +49,25 @@ jobs:
             sudo apt install --quiet -y ./dive_${DIVE_VERSION}_linux_amd64.deb
             popd
             CI=true dive --ci-config "${{ github.workspace }}/.dive-ci" nim_testing
+
+    - run: |
+            set -euo pipefail
+            docker create -ti --platform linux/amd64 --name dummyx64 nim_testing sh
+            mkdir -p nim/linux/amd64
+            docker cp -a dummyx64:/nim nim/linux/amd64
+    
+    - run: |
+            docker build
+            --build-arg NIM_VERSION=${NIM_VERSION} \
+            --file ./Dockerfile.runtime . \
+            --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64
+
+    - run: |
+            CI=true dive --ci-config "${{ github.workspace }}/.dive-ci" ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:x64
             
     -
       name: Push x64 to ghcr
-      if: success() && ${{ github.repository_owner }} == "maxisoft"
+      if: success() && ${{ github.repository_owner }} == "maxisoft" && ${{github.event_name != 'pull_request'}}
       run: |
             set -euo pipefail
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -100,7 +115,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker buildx build \
             --platform=${{ matrix.arch }} \
-            --output "type=image,push=true" \
+            --output "type=image,push=${{github.event_name != 'pull_request'}}" \
             --build-arg RUN_NIM_TEST=0 \
             --file ./Dockerfile . \
             --tag ghcr.io/${{ github.repository_owner }}/nim-docker-images/nim:v${NIM_VERSION}_${{ env.ARCHTAG }}
@@ -188,7 +203,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker buildx build \
             --platform=linux/amd64,linux/arm/v7,linux/arm64/v8,linux/arm/v6,linux/ppc64le \
-            --output "type=image,push=true" \
+            --output "type=image,push=${{github.event_name != 'pull_request'}}" \
             --build-arg NIM_VERSION=${NIM_VERSION} \
             --file ./Dockerfile.multiarch . \
             --tag maxisoft/nim:latest \
@@ -235,7 +250,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker buildx build \
             --platform=linux/amd64,linux/arm/v7,linux/arm64/v8,linux/arm/v6,linux/ppc64le \
-            --output "type=image,push=true" \
+            --output "type=image,push=${{github.event_name != 'pull_request'}}" \
             --build-arg NIM_VERSION=${NIM_VERSION} \
             --file ./Dockerfile.runtime . \
             --tag maxisoft/nim:latest_runtime \
