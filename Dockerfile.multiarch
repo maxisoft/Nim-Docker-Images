@@ -5,7 +5,9 @@ ARG GITHUB_USER=maxisoft
 ARG REPO_NAME=Nim-Docker-Images
 LABEL maintainer="github.com/${GITHUB_USER}" name="nim" description="Nim container" org.opencontainers.image.description="Nim container" nimversion="$NIM_VERSION" url="https://github.com/${GITHUB_USER}/${REPO_NAME}" vcs-url="https://github.com/${GITHUB_USER}/${REPO_NAME}" org.opencontainers.image.source="https://github.com/${GITHUB_USER}/${REPO_NAME}"
 ADD nim/$TARGETPLATFORM/nim.tar.xz /
-RUN apk add --no-cache build-base wget unzip openssl-dev zlib-dev pcre-dev pcre2-dev git sqlite-dev g++ curl tar xz nodejs gc-dev valgrind libucontext-dev && \
+RUN \ 
+    echo "${TARGETPLATFORM}"; \
+    apk add --no-cache build-base wget unzip openssl-dev zlib-dev pcre-dev pcre2-dev git sqlite-dev g++ curl tar xz nodejs gc-dev valgrind libucontext-dev && \
     ls -lah /nim && \
     ls -lah /nim/bin && \
     ln -s /nim/bin/nim /usr/bin/nim && ln -s /nim/bin/nimble /usr/bin/nimble && ln -s /nim/bin/nimsuggest /usr/bin/nimsuggest && ln -s /nim/bin/testament /usr/bin/testament && ln -s /nim/bin/nimpretty /usr/bin/nimpretty && ln -s /nim/bin/nim-gdb /usr/bin/nim-gdb && ln -s /nim/bin/atlas /usr/bin/atlas && \
