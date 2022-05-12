@@ -19,6 +19,6 @@ Currently the supported arch are `armv7`, `arm64` and `x64`.
 ### How to add and use the latest Nim version
 - Fork the repo
 - **Enable** the github actions in your own forked repo
-- Edit the [github actions file](https://github.com/maxisoft/Nim-Docker-Images/blob/7347e94ff9b929baf7462ce5b45e57cd8431de83/.github/workflows/docker.yml#L13) to checkout the newest version tag
+- Edit the [github actions file](https://github.com/maxisoft/Nim-Docker-Images/blob/8828877/.github/workflows/docker.yml#L10=) to checkout the newest version tag
 - Commit and wait for the github actions to successfully build an image
 - Create a pull request
