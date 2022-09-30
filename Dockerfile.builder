@@ -1,4 +1,4 @@
-FROM alpine:edge
+FROM alpine:3.14
 ARG TARGETPLATFORM
 ARG GITHUB_USER=maxisoft
 ARG REPO_NAME=Nim-Docker-Images
