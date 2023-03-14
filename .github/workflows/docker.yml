@@ -7,7 +7,7 @@ on:
     branches: [ main, dev, docker ]
   
 env:
-  NIM_VERSION: "1.6.10"
+  NIM_VERSION: "1.6.12"
   DIVE_VERSION: "0.10.0"
   DOCKERIO_USER: "${{ github.repository_owner }}"
 
